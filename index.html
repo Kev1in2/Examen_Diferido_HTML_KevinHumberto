@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portafolio Evaluación GCM | SPA</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Chosen Palette: Academic Slate & Blue -->
+    <!-- 
+        Primary: Slate-900 (Dark UI elements)
+        Secondary: Blue-600 (Actions/Highlights)
+        Background: Slate-50 (Canvas)
+        Accent: Emerald-500 (Success states)
+    -->
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .code-font { font-family: 'Fira Code', monospace; }
+        
+        /* Custom Scrollbar for inner panels */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Chart Container Strict Styling */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            margin: 0 auto;
+        }
+
+        /* Flowchart Node Styling */
+        .flow-node {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .flow-node:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .flow-active {
+            border-color: #2563eb;
+            background-color: #eff6ff;
+        }
+
+        /* Mobile Mockup Screen Transition */
+        .mockup-screen {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .mockup-screen.active {
+            display: flex;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes zoomIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .animate-zoom-in {
+            animation: zoomIn 0.5s ease-out;
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Ocultar barra de desplazamiento en contenedores scrollables */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .screen {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .screen.active {
+            display: flex;
+        }
+        .glass-effect {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+
+    <!-- Application Structure Plan: 
+         - A sidebar navigation (desktop) / bottom tab (mobile) structure.
+         - 'Views' approach: The single page swaps 'View Containers' based on selection.
+         - Data-driven: Content is stored in JS objects to allow dynamic rendering.
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used (except FontAwesome font icons). NO Mermaid JS used. -->
+</head>
+<body class="bg-slate-50 text-slate-800 h-screen flex overflow-hidden selection:bg-blue-100">
+
+    <!-- Sidebar Navigation -->
+    <aside class="w-64 bg-slate-900 text-white flex-col hidden md:flex shadow-xl z-20">
+        <div class="p-6 border-b border-slate-700">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-university text-blue-400 text-2xl"></i>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">UMA</h1>
+                    <p class="text-xs text-slate-400">Facultad de Ciencias Económicas</p>
+                </div>
+            </div>
+        </div>
+        
+        <nav class="flex-1 p-4 space-y-2">
+            <button onclick="app.navigate('dashboard')" class="nav-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-800 transition-colors bg-blue-600 text-white" data-target="dashboard">
+                <i class="fas fa-chart-pie w-6 text-center"></i>
+                <span>Resumen General</span>
+            </button>
+            <div class="pt-4 pb-2 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Módulos</div>
+            <button onclick="app.navigate('algorithms')" class="nav-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-800 transition-colors text-slate-300" data-target="algorithms">
+                <i class="fas fa-project-diagram w-6 text-center"></i>
+                <span>1. Algoritmos</span>
+            </button>
+            <button onclick="app.navigate('programming')" class="nav-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-800 transition-colors text-slate-300" data-target="programming">
+                <i class="fas fa-code w-6 text-center"></i>
+                <span>2. Programación</span>
+            </button>
+            <button onclick="app.navigate('mobile')" class="nav-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-800 transition-colors text-slate-300" data-target="mobile">
+                <i class="fas fa-mobile-screen w-6 text-center"></i>
+                <span>3. App Móvil</span>
+            </button>
+        </nav>
+
+        <div class="p-4 border-t border-slate-700">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center font-bold">
+                    ES
+                </div>
+                <div>
+                    <p class="text-sm font-semibold" id="sidebar-name">Kevin Hernandez</p>
+                    <p class="text-xs text-slate-400">GCM - Ciclo 02/2025</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Mobile Header -->
+    <div class="md:hidden fixed top-0 w-full bg-slate-900 text-white z-50 p-4 flex justify-between items-center shadow-md">
+        <span class="font-bold">UMA - GCM</span>
+        <button onclick="app.toggleMobile()" class="text-white">
+            <i class="fas fa-bars text-xl"></i>
+        </button>
+    </div>
+    <!-- Mobile Menu Overlay -->
+    <div id="mobile-menu" class="hidden fixed inset-0 bg-slate-900/95 z-40 pt-20 px-6">
+        <nav class="space-y-4">
+            <button onclick="app.navigate('dashboard'); app.toggleMobile()" class="block w-full text-left text-white py-2 border-b border-slate-700">Resumen</button>
+            <button onclick="app.navigate('algorithms'); app.toggleMobile()" class="block w-full text-left text-white py-2 border-b border-slate-700">Algoritmos</button>
+            <button onclick="app.navigate('programming'); app.toggleMobile()" class="block w-full text-left text-white py-2 border-b border-slate-700">Programación</button>
+            <button onclick="app.navigate('mobile'); app.toggleMobile()" class="block w-full text-left text-white py-2 border-b border-slate-700">App Móvil</button>
+        </nav>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto h-full p-6 md:p-10 pt-20 md:pt-10 scroll-smooth">
+        
+        <!-- DASHBOARD VIEW -->
+        <section id="view-dashboard" class="view-section space-y-8 animate-fade-in">
+            <header class="mb-8">
+                <h2 class="text-3xl font-bold text-slate-900">Panel de Evaluación</h2>
+                <p class="text-slate-500 mt-2">Resumen de actividades y ponderación del Segundo Diferido.</p>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Student Info Card -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <i class="fas fa-id-card text-blue-500"></i> Datos del Estudiante
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Nombre Completo</label>
+                            <div class="p-2 bg-slate-100 rounded text-slate-700 font-semibold">Kevin Humberto Hernandez Sanchez</div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Carné</label>
+                            <div class="p-2 bg-slate-100 rounded text-slate-700 font-semibold">HS221100336</div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Carrera</label>
+                            <div class="p-2 bg-slate-100 rounded text-slate-600">Técnico en Software</div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Asignatura</label>
+                            <div class="p-2 bg-slate-100 rounded text-slate-600">Gen. Contenidos Multimedia</div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Docente</label>
+                            <div class="p-2 bg-slate-100 rounded text-slate-600">Ing. Guillermo Pérez</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Score Distribution Chart -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col items-center justify-center">
+                    <h3 class="text-lg font-semibold mb-2 w-full text-left">Ponderación</h3>
+                    <div class="chart-container">
+                        <canvas id="scoreChart"></canvas>
+                    </div>
+                    <div class="mt-4 flex gap-4 text-xs text-slate-500">
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500"></span> 30% Algo</span>
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> 30% Prog</span>
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-500"></span> 40% App</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Access Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+                <button onclick="app.navigate('algorithms')" class="group cursor-pointer bg-white p-6 rounded-xl border border-slate-200 hover:border-blue-400 hover:shadow-md transition-all">
+                    <div class="w-12 h-12 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-sitemap text-xl"></i>
+                    </div>
+                    <h4 class="font-bold text-slate-800">Sección Algoritmos</h4>
+                    <p class="text-sm text-slate-500 mt-1">Diagramas de flujo y lógica secuencial.</p>
+                </button>
+                <button onclick="app.navigate('programming')" class="group cursor-pointer bg-white p-6 rounded-xl border border-slate-200 hover:border-emerald-400 hover:shadow-md transition-all">
+                    <div class="w-12 h-12 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-laptop-code text-xl"></i>
+                    </div>
+                    <h4 class="font-bold text-slate-800">Sección Programación</h4>
+                    <p class="text-sm text-slate-500 mt-1">Análisis de código JS y funciones.</p>
+                </button>
+                <button onclick="app.navigate('mobile')" class="group cursor-pointer bg-white p-6 rounded-xl border border-slate-200 hover:border-purple-400 hover:shadow-md transition-all">
+                    <div class="w-12 h-12 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-mobile-alt text-xl"></i>
+                    </div>
+                    <h4 class="font-bold text-slate-800">Sección Móvil</h4>
+                    <p class="text-sm text-slate-500 mt-1">UX/UI y prototipado de apps.</p>
+                </button>
+            </div>
+        </section>
+
+        <!-- ALGORITHMS VIEW -->
+        <section id="view-algorithms" class="view-section hidden space-y-8 animate-fade-in">
+            <header>
+                <div class="flex items-center gap-2 text-sm text-blue-600 font-bold uppercase tracking-wider mb-2">
+                    <i class="fas fa-project-diagram"></i> Sección 1
+                </div>
+                <h2 class="text-3xl font-bold text-slate-900">Lógica y Algoritmos</h2>
+                <p class="text-slate-500 mt-2 max-w-2xl">
+                    Esta sección explora la representación gráfica de procesos lógicos y el análisis de algoritmos secuenciales.
+                    Interactúe con los diagramas para ver el análisis detallado.
+                </p>
+            </header>
+
+            <!-- Interactive Flowchart -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                    <h3 class="font-bold text-lg">Actividad 1: Interpretación Gráfica</h3>
+                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Interactivo</span>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2">
+                    <!-- Visualization Area -->
+                    <div class="p-8 bg-slate-50 flex flex-col justify-center items-center border-r border-slate-100 relative min-h-[400px]">
+                        <img src="diagrama de flujo.drawio.png" alt="Diagrama de flujo que ilustra un algoritmo para determinar si un número es par o impar" class="max-w-full h-auto animate-zoom-in mb-4">
+                        <div class="w-full text-center">
+                            <p class="text-xs text-slate-500 mb-2">Haga clic en un paso para ver su análisis:</p>
+                            <div class="flex flex-wrap justify-center gap-2">
+                                <button onclick="app.showNodeInfo(1); app.setActive(this);" class="flow-node text-xs px-3 py-1 bg-white border rounded-full hover:bg-blue-50 transition-colors">Inicio</button>
+                                <button onclick="app.showNodeInfo(2); app.setActive(this);" class="flow-node text-xs px-3 py-1 bg-white border rounded-full hover:bg-blue-50 transition-colors">Leer N</button>
+                                <button onclick="app.showNodeInfo(3); app.setActive(this);" class="flow-node text-xs px-3 py-1 bg-white border rounded-full hover:bg-blue-50 transition-colors">Decisión</button>
+                                <button onclick="app.showNodeInfo(4); app.setActive(this);" class="flow-node text-xs px-3 py-1 bg-white border rounded-full hover:bg-blue-50 transition-colors">Rama Falsa</button>
+                                <button onclick="app.showNodeInfo(5); app.setActive(this);" class="flow-node text-xs px-3 py-1 bg-white border rounded-full hover:bg-blue-50 transition-colors">Rama Verdadera</button>
+                                <button onclick="app.showNodeInfo(6); app.setActive(this);" class="flow-node text-xs px-3 py-1 bg-white border rounded-full hover:bg-blue-50 transition-colors">Fin</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Info Panel -->
+                    <div class="p-8 flex flex-col justify-center">
+                        <div id="node-info-panel" class="transition-all duration-300">
+                            <h4 class="text-xl font-bold text-slate-800 mb-4" id="info-title">Análisis del Diagrama</h4>
+                            <p class="text-slate-600 mb-6" id="info-desc">
+                                El algoritmo resuelve un problema matemático para definir si el número es par o impar. Seleccione un nodo a la izquierda para ver el análisis específico de la estructura lógica.
+                            </p>
+                            
+                            <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500 mb-6">
+                                <h5 class="font-bold text-blue-900 text-sm mb-2">Estructura Lógica</h5>
+                                <p class="text-sm text-blue-800">
+                                    Condicional Doble (If-Else). Evalúa una condición y bifurca el flujo en dos caminos distintos (Verdadero/Falso).
+                                </p>
+                            </div>
+
+                            <div class="bg-slate-800 rounded-lg p-4 font-mono text-sm text-green-400 overflow-x-auto">
+                                <div class="flex justify-between text-xs text-slate-500 mb-2 border-b border-slate-700 pb-1">
+                                    <span>PSEUDOCÓDIGO</span>
+                                    <span>read-only</span>
+                                </div>
+<pre>
+Leer N
+Si (N mod 2 es igual a 0) Entonces
+    Imprimir "N sí es par"
+Sino
+    Imprimir "N no es par"
+Fin Si
+</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity 2: Robot Sequence -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <h3 class="font-bold text-lg mb-6">Actividad 2: Lógica Secuencial (Robot)</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <div class="flex items-center gap-3 mb-4 bg-slate-100 p-3 rounded-lg">
+                            <i class="fas fa-robot text-slate-600 text-2xl"></i>
+                            <div>
+                                <p class="text-xs font-bold uppercase text-slate-500">Tipo de Algoritmo</p>
+                                <p class="font-bold text-slate-800">Secuencial Lineal</p>
+                            </div>
+                        </div>
+                        <p class="text-slate-600 text-sm leading-relaxed mb-4">
+                            Se clasifica como secuencial porque las instrucciones siguen un camino único. Cada paso se ejecuta obligatoriamente después del anterior sin decisiones ni ciclos.
+                        </p>
+                        <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                            <div class="p-2 bg-green-50 text-green-700 rounded border border-green-200">
+                                <strong>Entrada</strong><br>Vaso, Agua
+                            </div>
+                            <div class="p-2 bg-yellow-50 text-yellow-700 rounded border border-yellow-200">
+                                <strong>Proceso</strong><br>Servir, Mezclar
+                            </div>
+                            <div class="p-2 bg-blue-50 text-blue-700 rounded border border-blue-200">
+                                <strong>Salida</strong><br>Bebida Lista
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Timeline Visualizer -->
+                    <div class="relative pl-8 border-l-2 border-slate-200 space-y-6">
+                        <div class="relative group">
+                            <span class="absolute -left-[41px] top-0 w-6 h-6 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-[10px] font-bold text-slate-600 group-hover:bg-blue-500 group-hover:text-white transition-colors">1</span>
+                            <p class="text-sm font-medium text-slate-700">Inicio: Tomar vaso</p>
+                        </div>
+                        <div class="relative group">
+                            <span class="absolute -left-[41px] top-0 w-6 h-6 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-[10px] font-bold text-slate-600 group-hover:bg-blue-500 group-hover:text-white transition-colors">2</span>
+                            <p class="text-sm font-medium text-slate-700">Encender dispensador</p>
+                        </div>
+                        <div class="relative group">
+                            <span class="absolute -left-[41px] top-0 w-6 h-6 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-[10px] font-bold text-slate-600 group-hover:bg-blue-500 group-hover:text-white transition-colors">3</span>
+                            <p class="text-sm font-medium text-slate-700">Servir 250ml agua</p>
+                        </div>
+                        <div class="relative group">
+                            <span class="absolute -left-[41px] top-0 w-6 h-6 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-[10px] font-bold text-slate-600 group-hover:bg-blue-500 group-hover:text-white transition-colors">4</span>
+                            <p class="text-sm font-medium text-slate-700">Apagar & Mezclar</p>
+                        </div>
+                        <div class="relative group">
+                            <span class="absolute -left-[41px] top-0 w-6 h-6 rounded-full bg-green-500 border-2 border-white flex items-center justify-center text-[10px] font-bold text-white shadow-sm">End</span>
+                            <p class="text-sm font-bold text-green-600">Entregar bebida</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROGRAMMING VIEW -->
+        <section id="view-programming" class="view-section hidden space-y-8 animate-fade-in">
+             <header>
+                <div class="flex items-center gap-2 text-sm text-emerald-600 font-bold uppercase tracking-wider mb-2">
+                    <i class="fas fa-code"></i> Sección 2
+                </div>
+                <h2 class="text-3xl font-bold text-slate-900">Programación Básica</h2>
+                <p class="text-slate-500 mt-2">
+                    Análisis de código JavaScript, variables y conceptos fundamentales de funciones.
+                </p>
+            </header>
+
+            <!-- Interactive Code Lab -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Editor Side -->
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg flex flex-col h-full">
+                    <div class="bg-slate-800 px-4 py-2 flex items-center justify-between border-b border-slate-700">
+                        <div class="flex gap-2">
+                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        </div>
+                        <span class="text-xs text-slate-400 font-mono">script.js</span>
+                    </div>
+                    <div class="p-6 flex-1 font-mono text-sm relative">
+                        <textarea id="code-editor" class="w-full h-full bg-transparent text-emerald-300 resize-none outline-none" spellcheck="false">
+// Actividad 3: Código Mejorado
+
+// 1. ENTRADA
+let a = Number(prompt("Ingresa num 1:"));
+let b = Number(prompt("Ingresa num 2:"));
+
+// 2. PROCESO
+let suma = a + b;
+
+// 3. SALIDA
+console.log('Suma: ' + suma);
+alert('Resultado: ' + suma);
+</textarea>
+                    </div>
+                    <div class="bg-slate-800 p-4 border-t border-slate-700 flex justify-end">
+                        <button onclick="app.runCode()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded text-sm font-bold transition-colors flex items-center gap-2">
+                            <i class="fas fa-play"></i> Ejecutar Código
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Explanation Side -->
+                <div class="space-y-6">
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 class="font-bold text-lg mb-4 text-slate-800">Análisis del Código</h3>
+                        <ul class="space-y-3">
+                            <li class="flex items-start gap-3">
+                                <span class="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded mt-0.5">Objetivo</span>
+                                <span class="text-sm text-slate-600">El programa está diseñado para realizar la suma de dos números proporcionados.</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="bg-purple-100 text-purple-700 text-xs font-bold px-2 py-1 rounded mt-0.5">Variables</span>
+                                <span class="text-sm text-slate-600 font-mono text-xs bg-slate-100 px-1 rounded">a, b, suma</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-1 rounded mt-0.5">Operadores</span>
+                                <span class="text-sm text-slate-600">Asignación (<code>=</code>), Aritmético (<code>+</code>), Concatenación.</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Functions Concept -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <i class="fas fa-cogs text-6xl text-slate-900"></i>
+                        </div>
+                        <h3 class="font-bold text-lg mb-2">¿Qué es una Función?</h3>
+                        <p class="text-sm text-slate-600 mb-4">
+                            "Un bloque de código independiente y reutilizable diseñado para realizar una tarea específica."
+                        </p>
+                        <div class="bg-slate-50 border border-slate-200 rounded p-3 mb-4">
+                            <p class="text-xs font-bold text-slate-500 uppercase mb-2">Importancia</p>
+                            <div class="flex gap-2 flex-wrap">
+                                <span class="px-2 py-1 bg-white border rounded text-xs text-slate-600 shadow-sm">Reutilización</span>
+                                <span class="px-2 py-1 bg-white border rounded text-xs text-slate-600 shadow-sm">Modularidad</span>
+                                <span class="px-2 py-1 bg-white border rounded text-xs text-slate-600 shadow-sm">Mantenimiento</span>
+                            </div>
+                        </div>
+                        <button class="text-blue-600 text-sm font-semibold hover:underline" onclick="document.getElementById('cpp-example').classList.toggle('hidden')">
+                            Ver ejemplo completo en C++ <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div id="cpp-example" class="hidden mt-3 bg-slate-900 text-slate-300 p-4 rounded-lg text-xs font-mono overflow-x-auto">
+<pre><code class="language-cpp">// Para compilar: g++ nombre_archivo.cpp -o ejecutable
+#include &lt;iostream&gt;
+#include &lt;iomanip&gt;
+
+// Prototipo de la función. Permite que main() la conozca.
+double calcular_total(double precio, double impuesto);
+
+int main() {
+    // Variables
+    double precio_producto = 89.99;
+    double tasa_iva = 0.13; // 13% de IVA
+
+    // Llamar a la función para obtener el resultado
+    double precio_final = calcular_total(precio_producto, tasa_iva);
+
+    // Mostrar resultados en consola de forma ordenada
+    std::cout &lt;&lt; std::fixed &lt;&lt; std::setprecision(2);
+    std::cout &lt;&lt; "--- Factura Sencilla ---" &lt;&lt; std::endl;
+    std::cout &lt;&lt; "Precio del producto: $" &lt;&lt; precio_producto &lt;&lt; std::endl;
+    std::cout &lt;&lt; "IVA (13%):           $" &lt;&lt; (precio_producto * tasa_iva) &lt;&lt; std::endl;
+    std::cout &lt;&lt; "------------------------" &lt;&lt; std::endl;
+    std::cout &lt;&lt; "Total a pagar:       $" &lt;&lt; precio_final &lt;&lt; std::endl;
+
+    return 0; // Indica que el programa finalizó correctamente
+}
+
+// Implementación (definición) de la función
+double calcular_total(double precio, double impuesto) {
+    double total = precio * (1.0 + impuesto);
+    return total;
+}
+</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity 4: Video Explanation -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mt-8">
+                <h3 class="font-bold text-lg mb-2">Actividad 4: Explicación mediante Video</h3>
+                <p class="text-sm text-slate-600 mb-6">
+                    Observe los siguientes videos que explican qué es una función en programación y luego revise las respuestas.
+                </p>
+
+                <!-- Video Players -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div class="rounded-lg overflow-hidden border border-slate-200 shadow-inner">
+                        <video controls class="w-full">
+                            <source src="Función_en_Programación_Video_Generado.mp4" type="video/mp4">
+                            Tu navegador no soporta la etiqueta de video.
+                        </video>
+                    </div>
+                    <div class="rounded-lg overflow-hidden border border-slate-200 shadow-inner">
+                        <video controls class="w-full">
+                            <source src="Video_Explicativo_con_Foto.mp4" type="video/mp4">
+                            Tu navegador no soporta la etiqueta de video.
+                        </video>
+                    </div>
+                </div>
+
+                <!-- Questions -->
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">1. Resume el concepto de función.</label>
+                        <div class="w-full bg-slate-50 border border-slate-200 rounded p-3 text-sm text-slate-700">
+                            Una función en programación es un bloque de código independiente y reutilizable diseñado para realizar una tarea específica.
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">2. Da un ejemplo de función con parámetros y retorno.</label>
+                        <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg flex flex-col">
+                            <div class="bg-slate-800 px-4 py-2 flex items-center justify-between border-b border-slate-700">
+                                <div class="flex gap-2">
+                                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                                </div>
+                                <span class="text-xs text-slate-400 font-mono">function_example.js</span>
+                            </div>
+                            <div class="p-6 flex-1 font-mono text-sm relative">
+                                <textarea id="function-code-editor" class="w-full h-64 bg-transparent text-emerald-300 resize-none outline-none" spellcheck="false">
+// Definición de la función
+function calcular_total(precio, impuesto) {
+    const monto_impuesto = precio * impuesto;
+    const total = precio + monto_impuesto;
+    return total; // Retorno
+}
+
+// Uso de la función
+const precio_final = calcular_total(100.0, 0.15);
+
+// Salida
+alert("El precio total es: " + precio_final);
+</textarea>
+                            </div>
+                            <div class="bg-slate-800 p-4 border-t border-slate-700 flex justify-end">
+                                <button onclick="app.runFunctionExample()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded text-sm font-bold transition-colors flex items-center gap-2">
+                                    <i class="fas fa-play"></i> Ejecutar Ejemplo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">3. Explica por qué son importantes las funciones.</label>
+                        <div class="w-full bg-slate-50 border border-slate-200 rounded p-4 text-sm text-slate-700 space-y-3">
+                            <p><strong class="text-slate-800">Reutilización de Código:</strong> En lugar de escribir las mismas 10 líneas de código cada vez que necesitas hacer un cálculo, simplemente llamas a la función una sola vez. Escribes una vez, usas muchas veces.</p>
+                            <p><strong class="text-slate-800">Modularidad:</strong> Permiten dividir un problema grande y complejo en problemas pequeños y manejables. Es más fácil resolver "cómo calcular un impuesto" y "cómo guardar en base de datos" por separado, que intentar hacer todo en un solo bloque gigante.</p>
+                            <p><strong class="text-slate-800">Facilidad de Mantenimiento:</strong> Si necesitas cambiar la fórmula del impuesto, solo la modificas en un lugar (dentro de la función) y el cambio se aplica automáticamente en todo el programa.</p>
+                            <p><strong class="text-slate-800">Legibilidad:</strong> Un programa que dice <code>calcular_total(100, 0.15)</code> es mucho más fácil de entender para un humano que leer una serie de operaciones matemáticas sueltas.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MOBILE VIEW -->
+        <section id="view-mobile" class="view-section hidden space-y-8 animate-fade-in">
+             <header>
+                <div class="flex items-center gap-2 text-sm text-purple-600 font-bold uppercase tracking-wider mb-2">
+                    <i class="fas fa-mobile-alt"></i> Sección 3
+                </div>
+                <h2 class="text-3xl font-bold text-slate-900">Aplicaciones Móviles</h2>
+                <div class="flex justify-between items-center">
+                    <p class="text-slate-500 mt-2">
+                        Análisis de UI/UX, flujos de usuario y tecnologías de desarrollo.
+                    </p>
+                    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onclick="app.showMobileAnswers()">
+                        Ver Respuestas
+                    </button>
+                </div>
+            </header>
+
+            <div class="w-full flex justify-center">
+                <!-- Mobile Device Container -->
+                <div class="relative w-full max-w-sm h-[800px] bg-slate-950 rounded-[3rem] shadow-2xl border-8 border-slate-800 overflow-hidden flex flex-col">
+                    
+                    <!-- Status Bar Mockup -->
+                    <div class="h-8 bg-slate-950 w-full flex justify-between items-center px-6 text-xs text-gray-400 z-50">
+                        <span>9:41</span>
+                        <div class="flex gap-2">
+                            <i class="fas fa-signal"></i>
+                            <i class="fas fa-wifi"></i>
+                            <i class="fas fa-battery-full"></i>
+                        </div>
+                    </div>
+
+                    <!-- PANTALLA 1: LOGIN -->
+                    <div id="screen-login" class="screen active flex-col justify-center items-center h-full px-8 w-full bg-gradient-to-b from-slate-900 to-indigo-950">
+                        <div class="mb-8 p-4 rounded-full bg-indigo-500/20 text-indigo-400 animate-pulse">
+                            <i class="fas fa-code text-5xl"></i>
+                        </div>
+                        <h1 class="text-3xl font-bold mb-2 tracking-tight text-white">CodeFunc</h1>
+                        <p class="text-slate-300 mb-10 text-center text-sm">Domina las funciones, domina el código.</p>
+                        
+                        <form onsubmit="handleLogin(event)" class="w-full space-y-4">
+                            <div class="relative">
+                                <i class="fas fa-envelope absolute left-4 top-3.5 text-slate-500"></i>
+                                <input type="email" placeholder="dev@correo.com" class="w-full bg-slate-800/50 border border-slate-700 rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-indigo-500 transition-colors text-sm text-slate-200" value="dev@admin.com">
+                            </div>
+                            <div class="relative">
+                                <i class="fas fa-lock absolute left-4 top-3.5 text-slate-500"></i>
+                                <input type="password" placeholder="••••••••" class="w-full bg-slate-800/50 border border-slate-700 rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-indigo-500 transition-colors text-sm text-slate-200" value="password123">
+                            </div>
+                            <div class="flex justify-end">
+                                <a href="#" class="text-xs text-indigo-400 hover:text-indigo-300">¿Olvidaste tu contraseña?</a>
+                            </div>
+                            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3.5 rounded-xl shadow-lg shadow-indigo-500/30 transition-all transform active:scale-95">
+                                Iniciar Sesión
+                            </button>
+                        </form>
+                        
+                        <div class="mt-8 text-center">
+                            <p class="text-xs text-slate-500">¿No tienes cuenta? <a href="#" class="text-indigo-400 font-semibold">Regístrate</a></p>
+                        </div>
+                    </div>
+
+                    <!-- PANTALLA 2: DASHBOARD / MENU PRINCIPAL -->
+                    <div id="screen-dashboard" class="screen flex-col h-full w-full bg-slate-900 relative">
+                        <!-- Header -->
+                        <div class="px-6 pt-6 pb-4 flex justify-between items-center">
+                            <div>
+                                <h2 class="text-xl font-bold">Hola, Dev 👋</h2>
+                                <p class="text-xs text-slate-400">¿Qué quieres aprender hoy?</p>
+                            </div>
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="Avatar de usuario" class="w-10 h-10 rounded-full border-2 border-indigo-500 bg-slate-800">
+                        </div>
+
+                        <!-- Scrollable Content -->
+                        <div class="flex-1 overflow-y-auto no-scrollbar px-6 pb-24">
+                            
+                            <!-- Banners / Featured -->
+                            <div class="w-full h-32 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 p-5 relative overflow-hidden mb-6 shadow-lg shadow-indigo-900/20">
+                                <div class="relative z-10 w-2/3">
+                                    <span class="bg-white/20 text-white text-[10px] px-2 py-1 rounded-md font-bold uppercase">Nuevo</span>
+                                    <h3 class="font-bold text-lg mt-2 leading-tight">Lambdas en Python</h3>
+                                    <p class="text-xs text-white/80 mt-1">Funciones anónimas en 1 min.</p>
+                                </div>
+                                <i class="fab fa-python absolute -bottom-4 -right-4 text-9xl text-white/10 rotate-12"></i>
+                            </div>
+
+                            <!-- Categories Grid -->
+                            <h3 class="font-bold text-sm mb-4 text-slate-300">Lenguajes</h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <!-- Python Card -->
+                                <button onclick="navigateToList('Python')" class="bg-slate-800/50 p-4 rounded-2xl border border-slate-700 hover:border-yellow-500/50 transition-all group text-left">
+                                    <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center mb-3 group-hover:bg-yellow-500/20 transition-colors">
+                                        <i class="fab fa-python text-yellow-500 text-xl"></i>
+                                    </div>
+                                    <h4 class="font-bold text-sm">Python</h4>
+                                    <p class="text-[10px] text-slate-400 mt-1">12 Funciones</p>
+                                </button>
+
+                                <!-- JS Card -->
+                                <button onclick="navigateToList('JavaScript')" class="bg-slate-800/50 p-4 rounded-2xl border border-slate-700 hover:border-yellow-300/50 transition-all group text-left">
+                                    <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center mb-3 group-hover:bg-yellow-300/20 transition-colors">
+                                        <i class="fab fa-js text-yellow-300 text-xl"></i>
+                                    </div>
+                                    <h4 class="font-bold text-sm">JavaScript</h4>
+                                    <p class="text-[10px] text-slate-400 mt-1">15 Funciones</p>
+                                </button>
+
+                                <!-- C++ Card -->
+                                <button onclick="navigateToList('C++')" class="bg-slate-800/50 p-4 rounded-2xl border border-slate-700 hover:border-blue-500/50 transition-all group text-left">
+                                    <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center mb-3 group-hover:bg-blue-500/20 transition-colors">
+                                        <span class="text-blue-500 font-bold text-xs">C++</span>
+                                    </div>
+                                    <h4 class="font-bold text-sm">C++</h4>
+                                    <p class="text-[10px] text-slate-400 mt-1">8 Funciones</p>
+                                </button>
+
+                                <!-- Java Card -->
+                                <button onclick="navigateToList('Java')" class="bg-slate-800/50 p-4 rounded-2xl border border-slate-700 hover:border-red-500/50 transition-all group text-left">
+                                    <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center mb-3 group-hover:bg-red-500/20 transition-colors">
+                                        <i class="fab fa-java text-red-500 text-xl"></i>
+                                    </div>
+                                    <h4 class="font-bold text-sm">Java</h4>
+                                    <p class="text-[10px] text-slate-400 mt-1">10 Funciones</p>
+                                </button>
+                            </div>
+
+                            <!-- Recent Activity -->
+                            <h3 class="font-bold text-sm mt-6 mb-4 text-slate-300">Visto recientemente</h3>
+                            <div class="bg-slate-800/30 p-3 rounded-xl flex items-center gap-3 mb-2">
+                                <div class="w-10 h-10 rounded-lg bg-yellow-500/10 flex items-center justify-center text-yellow-500">
+                                    <span class="font-mono text-xs">def</span>
+                                </div>
+                                <div>
+                                    <h5 class="text-xs font-bold">Definición de función</h5>
+                                    <p class="text-[10px] text-slate-400">Python • Conceptos Básicos</p>
+                                </div>
+                                <i class="fas fa-chevron-right ml-auto text-slate-600 text-xs"></i>
+                            </div>
+                        </div>
+
+                        <!-- Bottom Navigation -->
+                        <div class="glass-effect absolute bottom-0 w-full h-20 rounded-b-[2.5rem] flex justify-around items-center px-6 pb-2 z-20">
+                            <button class="flex flex-col items-center gap-1 text-indigo-400">
+                                <i class="fas fa-home text-lg"></i>
+                                <span class="text-[10px] font-medium">Inicio</span>
+                            </button>
+                            <button class="flex flex-col items-center gap-1 text-slate-500 hover:text-slate-300">
+                                <i class="fas fa-search text-lg"></i>
+                                <span class="text-[10px] font-medium">Buscar</span>
+                            </button>
+                            <button class="flex flex-col items-center gap-1 text-slate-500 hover:text-slate-300">
+                                <i class="fas fa-bookmark text-lg"></i>
+                                <span class="text-[10px] font-medium">Guardado</span>
+                            </button>
+                            <button onclick="navigateToLogin()" class="flex flex-col items-center gap-1 text-slate-500 hover:text-red-400">
+                                <i class="fas fa-sign-out-alt text-lg"></i>
+                                <span class="text-[10px] font-medium">Salir</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- PANTALLA 3: LISTADO DE FUNCIONES (CATÁLOGO) -->
+                    <div id="screen-list" class="screen flex-col h-full w-full bg-slate-900">
+                        <!-- Header -->
+                        <div class="px-6 pt-6 pb-4 flex items-center gap-4">
+                            <button onclick="navigateToDashboard()" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-slate-700 hover:text-white transition-colors">
+                                <i class="fas fa-arrow-left text-sm"></i>
+                            </button>
+                            <div>
+                                <h2 id="list-title" class="text-xl font-bold">Python</h2>
+                                <p class="text-xs text-slate-400">Funciones Core</p>
+                            </div>
+                        </div>
+
+                        <!-- Search Bar -->
+                        <div class="px-6 mb-4">
+                            <div class="relative">
+                                <i class="fas fa-search absolute left-4 top-3 text-slate-500 text-xs"></i>
+                                <input type="text" id="search-input" onkeyup="filterFunctions()" placeholder="Buscar función..." class="w-full bg-slate-800 border border-slate-700 rounded-xl py-2.5 pl-10 pr-4 text-xs focus:outline-none focus:border-indigo-500 text-slate-300 placeholder-slate-500">
+                            </div>
+                            
+                            <!-- Filters/Chips -->
+                            <div class="flex gap-2 mt-3 overflow-x-auto no-scrollbar pb-2">
+                                <button class="px-3 py-1 bg-indigo-600 text-white rounded-full text-[10px] font-medium whitespace-nowrap">Todos</button>
+                                <button class="px-3 py-1 bg-slate-800 text-slate-400 border border-slate-700 rounded-full text-[10px] font-medium whitespace-nowrap">Input/Output</button>
+                                <button class="px-3 py-1 bg-slate-800 text-slate-400 border border-slate-700 rounded-full text-[10px] font-medium whitespace-nowrap">Math</button>
+                                <button class="px-3 py-1 bg-slate-800 text-slate-400 border border-slate-700 rounded-full text-[10px] font-medium whitespace-nowrap">String</button>
+                            </div>
+                        </div>
+
+                        <!-- List Content -->
+                        <div id="functions-container" class="flex-1 overflow-y-auto no-scrollbar px-6 pb-8 space-y-4">
+                            <!-- Items will be injected by JS -->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="space-y-6 mt-8">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-2">1. Describa la función de cada pantalla.</h3>
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                        <ul class="space-y-4">
+                            <li>
+                                <strong class="font-semibold text-slate-700">Pantalla de Login (#screen-login):</strong>
+                                <p class="text-slate-600">Función: Actúa como la barrera de seguridad y entrada. Su propósito es capturar las credenciales del usuario (simuladas en el código como dev@admin.com) para permitir el acceso al contenido educativo.</p>
+                            </li>
+                            <li>
+                                <strong class="font-semibold text-slate-700">Pantalla Dashboard (#screen-dashboard):</strong>
+                                <p class="text-slate-600">Función: Es el "Hub" de navegación. Su función principal es categorizar el contenido por lenguajes de programación (Python, JS, C++, Java) y destacar novedades (como el banner de "Lambdas"), permitiendo al usuario decidir qué tema estudiar.</p>
+                            </li>
+                            <li>
+                                <strong class="font-semibold text-slate-700">Pantalla de Listado (#screen-list):</strong>
+                                <p class="text-slate-600">Función: Es la pantalla de consumo de contenido. Su función es desplegar dinámicamente la información específica (funciones, descripciones y fragmentos de código) del lenguaje seleccionado previamente, permitiendo además filtrar y copiar ejemplos.</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-2">2. Identifique un flujo de usuario posible.</h3>
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                        <ul class="space-y-2 list-decimal list-inside text-slate-600">
+                            <li><strong class="font-semibold text-slate-700">Inicio y Autenticación:</strong> El usuario carga la app y ve el Login. Ingresa sus datos y presiona el botón "Iniciar Sesión". El sistema simula una carga (setTimeout) y transiciona al Dashboard.</li>
+                            <li><strong class="font-semibold text-slate-700">Selección de Tema:</strong> Estando en el Dashboard, el usuario hace clic (evento onclick) en la tarjeta de un lenguaje específico, por ejemplo, "Python".</li>
+                            <li><strong class="font-semibold text-slate-700">Consumo y Filtrado:</strong> La app navega a la pantalla de Listado, inyectando los datos de Python. El usuario puede usar la barra de búsqueda para filtrar por "print" o copiar el código de un ejemplo.</li>
+                            <li><strong class="font-semibold text-slate-700">Retorno:</strong> El usuario presiona el botón de flecha "Atrás" (navigateToDashboard) para regresar al menú principal y elegir otro lenguaje.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-2">3. Mencione componentes UI presentes.</h3>
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                        <p class="text-slate-600 mb-4">Dentro del código se identifican los siguientes componentes de interfaz:</p>
+                        <ul class="space-y-3">
+                            <li><strong class="font-semibold text-slate-700">Inputs de Texto:</strong> Campos estilizados para correo, contraseña y búsqueda (<code>&lt;input type="email"&gt;</code>, etc.).</li>
+                            <li><strong class="font-semibold text-slate-700">Botones (Buttons):</strong>
+                                <ul class="list-disc list-inside ml-4 text-slate-600">
+                                    <li><strong class="font-semibold">Primarios:</strong> Botón de "Iniciar Sesión" con gradiente y sombra.</li>
+                                    <li><strong class="font-semibold">Icon Buttons:</strong> Botones para "Copiar código" o "Atrás".</li>
+                                </ul>
+                            </li>
+                            <li><strong class="font-semibold text-slate-700">Navigation Bar:</strong> Barra inferior con iconos (Inicio, Buscar, Guardado, Perfil).</li>
+                            <li><strong class="font-semibold text-slate-700">Tarjetas (Cards):</strong>
+                                <ul class="list-disc list-inside ml-4 text-slate-600">
+                                    <li><strong class="font-semibold">Category Cards:</strong> Contenedores en grid para cada lenguaje con iconos y sombras al pasar el mouse (hover).</li>
+                                    <li><strong class="font-semibold">Function Cards:</strong> Tarjetas en el listado que contienen el título, la etiqueta de categoría (Badge/Chip) y el bloque de código.</li>
+                                </ul>
+                            </li>
+                            <li><strong class="font-semibold text-slate-700">Chips de Filtro:</strong> Pequeños botones redondeados en el listado ("Todos", "I/O", "Math") para filtrar contenido.</li>
+                            <li><strong class="font-semibold text-slate-700">Feedback Visual:</strong>
+                                <ul class="list-disc list-inside ml-4 text-slate-600">
+                                    <li><strong class="font-semibold">Spinners/Estados de carga:</strong> Simulación de "Verificando..." en el botón de login.</li>
+                                    <li><strong class="font-semibold">Toast/Icon Change:</strong> Al copiar código, el icono cambia temporalmente a un check verde.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mt-8">
+                <h3 class="font-bold text-lg mb-2">Actividad 6: Desarrollo Conceptual basado en Video</h3>
+                <p class="text-sm text-slate-600 mb-6">
+                    Observe los siguientes videos donde se explica la diferencia entre app nativa, web app e híbrida.
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="rounded-lg overflow-hidden border border-slate-200 shadow-inner flex flex-col">
+                        <video controls class="w-full">
+                            <source src="Video_Explicativo_Apps_Nativas_Web_e_Híbridas.mp4" type="video/mp4">
+                            Tu navegador no soporta la etiqueta de video.
+                        </video>
+                        <div class="p-3 bg-slate-50 text-xs font-semibold text-slate-600 border-t border-slate-200">
+                           aplicaciones nativas
+                        </div>
+                    </div>
+                    <div class="rounded-lg overflow-hidden border border-slate-200 shadow-inner flex flex-col">
+                        <video controls class="w-full">
+                            <source src="Continuación_de_aplicación_web_pendiente.mp4" type="video/mp4">
+                            Tu navegador no soporta la etiqueta de video.
+                        </video>
+                        <div class="p-3 bg-slate-50 text-xs font-semibold text-slate-600 border-t border-slate-200">
+                           aplicacion web
+                        </div>
+                    </div>
+                    <div class="rounded-lg overflow-hidden border border-slate-200 shadow-inner flex flex-col">
+                        <video controls class="w-full">
+                            <source src="Generación_de_Video_sobre_Aplicaciones_Híbridas.mp4" type="video/mp4">
+                            Tu navegador no soporta la etiqueta de video.
+                        </video>
+                        <div class="p-3 bg-slate-50 text-xs font-semibold text-slate-600 border-t border-slate-200">
+                           aplicaciones hibridas
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Explanation Text -->
+                <div class="mt-8 space-y-8">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800 mb-2">1. Diferencias entre las tres</h3>
+                        <p class="text-sm text-slate-600 mb-4">La diferencia principal radica en cómo se construyen y cómo se ejecutan en el teléfono.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div class="bg-slate-50 rounded-lg p-4 border-l-4 border-blue-400">
+                                <p class="font-bold text-slate-800 mb-2 flex items-center gap-2">📱 App Nativa</p>
+                                <ul class="space-y-1 list-disc list-inside text-slate-600">
+                                    <li><strong class="font-semibold">Rendimiento:</strong> El más alto y fluido.</li>
+                                    <li><strong class="font-semibold">Acceso al Hardware:</strong> Total (cámara, GPS, sensores, Bluetooth) sin restricciones.</li>
+                                    <li><strong class="font-semibold text-red-600">Desventaja:</strong> Es costoso y lento, ya que debes crear dos aplicaciones por separado.</li>
+                                </ul>
+                            </div>
+                            <div class="bg-slate-50 rounded-lg p-4 border-l-4 border-green-400">
+                                <p class="font-bold text-slate-800 mb-2 flex items-center gap-2">🌐 Web App / PWA</p>
+                                <ul class="space-y-1 list-disc list-inside text-slate-600">
+                                    <li><strong class="font-semibold">Rendimiento:</strong> Depende del navegador y la conexión.</li>
+                                    <li><strong class="font-semibold">Acceso al Hardware:</strong> Limitado.</li>
+                                    <li><strong class="font-semibold text-green-600">Ventaja:</strong> Funciona en cualquier dispositivo con navegador. Es la opción más barata.</li>
+                                </ul>
+                            </div>
+                             <div class="bg-slate-50 rounded-lg p-4 border-l-4 border-purple-400">
+                                <p class="font-bold text-slate-800 mb-2 flex items-center gap-2">🔄 App Híbrida / Multiplataforma</p>
+                                <ul class="space-y-1 list-disc list-inside text-slate-600">
+                                    <li><strong class="font-semibold">Rendimiento:</strong> Muy cercano al nativo.</li>
+                                    <li><strong class="font-semibold">Acceso al Hardware:</strong> Bueno (a través de "puentes" o plugins).</li>
+                                    <li><strong class="font-semibold text-green-600">Ventaja:</strong> "Escribe una vez, ejecuta en todos lados". Ahorra mucho tiempo.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800 mb-2">2. ¿Qué tipo elegirías para un proyecto escolar?</h3>
+                        <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                            <p class="text-sm text-slate-700 mb-3"><strong class="text-slate-900">Respuesta:</strong> Sin dudarlo, elegiría el desarrollo <strong class="font-semibold text-purple-700">Híbrido / Multiplataforma</strong>.</p>
+                             <div class="bg-white rounded p-3 border border-slate-200">
+                                <p class="font-bold text-slate-800 mb-2 text-xs uppercase">¿Por qué?</p>
+                                <ul class="space-y-2 list-disc list-inside text-sm text-slate-600">
+                                    <li><strong>Curva de aprendizaje:</strong> Si ya conoces algo de desarrollo web (JavaScript/HTML/CSS), la transición es muy suave. No necesitas aprender Swift (para iOS) y Kotlin (para Android) desde cero.</li>
+                                    <li><strong>Eficiencia de tiempo:</strong> En la escuela, los plazos son cortos. Con este enfoque, programas tu función una vez y ya la tienes lista para presentarla tanto en un teléfono Android como en un iPhone (o simulador).</li>
+                                    <li><strong>Resultado visual:</strong> Las herramientas actuales permiten crear interfaces muy bonitas y modernas con poco esfuerzo, lo cual suma puntos en la presentación del proyecto.</li>
+                                </ul>
+                                <p class="mt-3 text-xs text-slate-500 bg-slate-100 p-2 rounded"><strong>Nota:</strong> La única excepción es si tu clase es específicamente de "Programación en Java/Kotlin" o "Programación en Swift". En ese caso, debes usar Nativa obligatoriamente.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800 mb-2">3. Dos herramientas de desarrollo móvil actuales</h3>
+                        <p class="text-sm text-slate-600 mb-4">Estas dos dominan el mercado de desarrollo multiplataforma hoy en día y son excelentes para aprender:</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="border border-slate-200 rounded-lg p-4">
+                                <p class="font-bold text-slate-800">A. Flutter (creado por Google)</p>
+                                <ul class="mt-2 space-y-1 list-disc list-inside text-sm text-slate-600">
+                                    <li><strong>Lenguaje:</strong> Dart.</li>
+                                    <li><strong>Por qué es popular:</strong> Es extremadamente rápido y permite controlar cada píxel de la pantalla. Dibuja su propia interfaz, por lo que se ve idéntica en cualquier marca de teléfono.</li>
+                                    <li><strong>Ideal para:</strong> Quienes quieren un diseño visualmente impactante y fluidez total.</li>
+                                </ul>
+                            </div>
+                             <div class="border border-slate-200 rounded-lg p-4">
+                                <p class="font-bold text-slate-800">B. React Native (creado por Meta/Facebook)</p>
+                                <ul class="mt-2 space-y-1 list-disc list-inside text-sm text-slate-600">
+                                    <li><strong>Lenguaje:</strong> JavaScript / TypeScript.</li>
+                                    <li><strong>Por qué es popular:</strong> Utiliza el mismo lenguaje que se usa para el desarrollo web (React). Si sabes hacer webs modernas, ya sabes el 80% de React Native.</li>
+                                    <li><strong>Ideal para:</strong> Quienes vienen del desarrollo web y quieren aprovechar ese conocimiento.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Logic Script -->
+    <script>
+        const app = {
+            state: {
+                currentView: 'dashboard',
+                studentName: 'Kevin Hernandez',
+                chartInstance: null
+            },
+
+            // Navigation Logic
+            navigate: (targetId) => {
+                // Update State
+                app.state.currentView = targetId;
+
+                // Toggle Views
+                document.querySelectorAll('.view-section').forEach(el => {
+                    if (el.id === `view-${targetId}`) {
+                        el.classList.remove('hidden');
+                        el.classList.add('flex', 'flex-col'); // Ensure flex layout if needed
+                    } else {
+                        el.classList.add('hidden');
+                        el.classList.remove('flex');
+                    }
+                });
+
+                // Update Sidebar Active State
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    if (btn.dataset.target === targetId) {
+                        btn.classList.add('bg-blue-600', 'text-white');
+                        btn.classList.remove('text-slate-300');
+                    } else {
+                        btn.classList.remove('bg-blue-600', 'text-white');
+                        btn.classList.add('text-slate-300');
+                    }
+                });
+            },
+
+            // Dashboard Chart
+            initChart: () => {
+                const ctx = document.getElementById('scoreChart').getContext('2d');
+                app.state.chartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Algoritmos (30%)', 'Programación (30%)', 'App Móvil (40%)'],
+                        datasets: [{
+                            data: [30, 30, 40],
+                            backgroundColor: ['#3b82f6', '#10b981', '#a855f7'],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { 
+                                callbacks: {
+                                    label: (item) => ` ${item.label}`
+                                }
+                            }
+                        },
+                        cutout: '70%'
+                    }
+                });
+            },
+
+            // Algorithm Interaction
+            showNodeInfo: (id) => {
+                const title = document.getElementById('info-title');
+                const desc = document.getElementById('info-desc');
+                const panel = document.getElementById('node-info-panel');
+
+                panel.classList.remove('opacity-100');
+                panel.classList.add('opacity-0');
+
+                requestAnimationFrame(() => {
+                    switch(id) {
+                        case 1:
+                            title.innerText = "Inicio";
+                            desc.innerText = "Punto de partida del algoritmo. No realiza ninguna operación lógica, solo marca el comienzo del flujo.";
+                            break;
+                        case 2: 
+                            title.innerText = "Entrada de Datos (Leer N)";
+                            desc.innerText = "El sistema recibe un valor numérico 'N' por parte del usuario o sistema externo para ser procesado.";
+                            break;
+                        case 3:
+                            title.innerText = "Decisión (Condicional)";
+                            desc.innerText = "Se evalúa 'N mod 2 = 0'. El operador 'mod' obtiene el residuo de la división. Si el residuo es 0, el número es par.";
+                            break;
+                        case 4:
+                            title.innerText = "Rama Falsa (NO)";
+                            desc.innerText = "Si el residuo NO es 0, el flujo sigue este camino e imprime 'IMPAR'.";
+                            break;
+                        case 5:
+                            title.innerText = "Rama Verdadera (SI)";
+                            desc.innerText = "Si el residuo ES 0, el flujo sigue este camino e imprime 'PAR'.";
+                            break;
+                        case 6:
+                            title.innerText = "Fin";
+                            desc.innerText = "Terminación del proceso. Ambos caminos (par e impar) convergen aquí.";
+                            break;
+                    }
+                    panel.classList.remove('opacity-0');
+                    panel.classList.add('opacity-100');
+                });
+            },
+
+            // Code Runner Simulation
+            runCode: () => {
+                const btn = document.querySelector('button[onclick="app.runCode()"]');
+                const originalText = btn.innerHTML;
+                
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Ejecutando...';
+                
+                setTimeout(() => {
+                    alert("Simulación de Ejecución:\n\n> Ingresa num 1: [Usuario ingresa 5]\n> Ingresa num 2: [Usuario ingresa 10]\n> LOG: La suma es: 15\n> ALERT: El resultado de la suma es: 15");
+                    btn.innerHTML = originalText;
+                }, 800);
+            },
+
+            // Function example runner
+            runFunctionExample: () => {
+                const code = document.getElementById('function-code-editor').value;
+                try {
+                    new Function(code)();
+                } catch (e) {
+                    alert('Error en el código: ' + e.message);
+                }
+            },
+
+            setActive: (el) => {
+                // Remove active class from all siblings
+                [...el.parentElement.children].forEach(child => {
+                    child.classList.remove('flow-active');
+                });
+                // Add active class to the clicked element
+                el.classList.add('flow-active');
+            },
+
+            toggleMobile: () => {
+                document.getElementById('mobile-menu').classList.toggle('hidden');
+            },
+
+            showMobileAnswers: () => {
+                document.getElementById('mobile-answers-modal').classList.toggle('hidden');
+            }
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            app.initChart();
+            // Ensure first view is active
+            app.navigate('dashboard');
+
+            // Modal handling
+            const modal = document.getElementById('mobile-answers-modal');
+            const closeModalBtn = document.getElementById('close-modal');
+
+            closeModalBtn.addEventListener('click', () => {
+                modal.classList.add('hidden');
+            });
+
+            window.addEventListener('click', (event) => {
+                if (event.target == modal) {
+                    modal.classList.add('hidden');
+                }
+            });
+        });
+
+    </script>
+
+    <div id="mobile-answers-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Respuestas de la Sección Móvil</h3>
+                <div class="mt-2 px-7 py-3">
+                    <div class="space-y-6 text-left">
+                        <div>
+                            <h4 class="text-md font-bold text-slate-800 mb-2">1. Describa la función de cada pantalla.</h4>
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm">
+                                <ul class="space-y-4">
+                                    <li>
+                                        <strong class="font-semibold text-slate-700">Pantalla de Login (#screen-login):</strong>
+                                        <p class="text-slate-600">Función: Actúa como la barrera de seguridad y entrada. Su propósito es capturar las credenciales del usuario (simuladas en el código como dev@admin.com) para permitir el acceso al contenido educativo.</p>
+                                    </li>
+                                    <li>
+                                        <strong class="font-semibold text-slate-700">Pantalla Dashboard (#screen-dashboard):</strong>
+                                        <p class="text-slate-600">Función: Es el "Hub" de navegación. Su función principal es categorizar el contenido por lenguajes de programación (Python, JS, C++, Java) y destacar novedades (como el banner de "Lambdas"), permitiendo al usuario decidir qué tema estudiar.</p>
+                                    </li>
+                                    <li>
+                                        <strong class="font-semibold text-slate-700">Pantalla de Listado (#screen-list):</strong>
+                                        <p class="text-slate-600">Función: Es la pantalla de consumo de contenido. Su función es desplegar dinámicamente la información específica (funciones, descripciones y fragmentos de código) del lenguaje seleccionado previamente, permitiendo además filtrar y copiar ejemplos.</p>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-md font-bold text-slate-800 mb-2">2. Identifique un flujo de usuario posible.</h4>
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm">
+                                <ul class="space-y-2 list-decimal list-inside text-slate-600">
+                                    <li><strong class="font-semibold text-slate-700">Inicio y Autenticación:</strong> El usuario carga la app y ve el Login. Ingresa sus datos y presiona el botón "Iniciar Sesión". El sistema simula una carga (setTimeout) y transiciona al Dashboard.</li>
+                                    <li><strong class="font-semibold text-slate-700">Selección de Tema:</strong> Estando en el Dashboard, el usuario hace clic (evento onclick) en la tarjeta de un lenguaje específico, por ejemplo, "Python".</li>
+                                    <li><strong class="font-semibold text-slate-700">Consumo y Filtrado:</strong> La app navega a la pantalla de Listado, inyectando los datos de Python. El usuario puede usar la barra de búsqueda para filtrar por "print" o copiar el código de un ejemplo.</li>
+                                    <li><strong class="font-semibold text-slate-700">Retorno:</strong> El usuario presiona el botón de flecha "Atrás" (navigateToDashboard) para regresar al menú principal y elegir otro lenguaje.</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-md font-bold text-slate-800 mb-2">3. Mencione componentes UI presentes.</h4>
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm">
+                                <p class="text-slate-600 mb-4">Dentro del código se identifican los siguientes componentes de interfaz:</p>
+                                <ul class="space-y-3">
+                                    <li><strong class="font-semibold text-slate-700">Inputs de Texto:</strong> Campos estilizados para correo, contraseña y búsqueda (<code>&lt;input type="email"&gt;</code>, etc.).</li>
+                                    <li><strong class="font-semibold text-slate-700">Botones (Buttons):</strong>
+                                        <ul class="list-disc list-inside ml-4 text-slate-600">
+                                            <li><strong class="font-semibold">Primarios:</strong> Botón de "Iniciar Sesión" con gradiente y sombra.</li>
+                                            <li><strong class="font-semibold">Icon Buttons:</strong> Botones para "Copiar código" o "Atrás".</li>
+                                        </ul>
+                                    </li>
+                                    <li><strong class="font-semibold text-slate-700">Navigation Bar:</strong> Barra inferior con iconos (Inicio, Buscar, Guardado, Perfil).</li>
+                                    <li><strong class="font-semibold text-slate-700">Tarjetas (Cards):</strong>
+                                        <ul class="list-disc list-inside ml-4 text-slate-600">
+                                            <li><strong class="font-semibold">Category Cards:</strong> Contenedores en grid para cada lenguaje con iconos y sombras al pasar el mouse (hover).</li>
+                                            <li><strong class="font-semibold">Function Cards:</strong> Tarjetas en el listado que contienen el título, la etiqueta de categoría (Badge/Chip) y el bloque de código.</li>
+                                        </ul>
+                                    </li>
+                                    <li><strong class="font-semibold text-slate-700">Chips de Filtro:</strong> Pequeños botones redondeados en el listado ("Todos", "I/O", "Math") para filtrar contenido.</li>
+                                    <li><strong class="font-semibold text-slate-700">Feedback Visual:</strong>
+                                        <ul class="list-disc list-inside ml-4 text-slate-600">
+                                            <li><strong class="font-semibold">Spinners/Estados de carga:</strong> Simulación de "Verificando..." en el botón de login.</li>
+                                            <li><strong class="font-semibold">Toast/Icon Change:</strong> Al copiar código, el icono cambia temporalmente a un check verde.</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="items-center px-4 py-3">
+                    <button id="close-modal" class="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // --- DATA (Simulando base de datos) ---
+        const functionsData = {
+            'Python': [
+                { name: 'print()', cat: 'I/O', desc: 'Muestra mensajes en la consola.', code: 'print("Hola Mundo")' },
+                { name: 'len()', cat: 'Utils', desc: 'Devuelve la longitud de un objeto.', code: 'len([1, 2, 3]) # 3' },
+                { name: 'def', cat: 'Core', desc: 'Palabra clave para definir funciones.', code: 'def mi_func():\n  pass' },
+                { name: 'input()', cat: 'I/O', desc: 'Lee una línea de la entrada.', code: 'x = input("Nombre:")' },
+                { name: 'range()', cat: 'Utils', desc: 'Genera una secuencia de números.', code: 'for i in range(5):' },
+            ],
+            'JavaScript': [
+                { name: 'console.log()', cat: 'I/O', desc: 'Imprime mensajes en la consola web.', code: 'console.log("Hey");' },
+                { name: 'function', cat: 'Core', desc: 'Declara una función estándar.', code: 'function suma(a, b) {}' },
+                { name: '=> (Arrow)', cat: 'Core', desc: 'Sintaxis corta para funciones.', code: 'const x = () => {};' },
+                { name: 'map()', cat: 'Array', desc: 'Crea un nuevo array transformado.', code: '[1,2].map(x => x*2)' },
+                { name: 'filter()', cat: 'Array', desc: 'Filtra elementos de un array.', code: 'arr.filter(x => x>10)' },
+            ],
+            'C++': [
+                { name: 'cout <<', cat: 'I/O', desc: 'Salida estándar de datos.', code: 'std::cout << "Hola";' },
+                { name: 'cin >>', cat: 'I/O', desc: 'Entrada estándar de datos.', code: 'std::cin >> variable;' },
+                { name: 'main()', cat: 'Core', desc: 'Punto de entrada del programa.', code: 'int main() { return 0; }' },
+                { name: 'void', cat: 'Type', desc: 'Indica que la función no retorna nada.', code: 'void saludar() {}' },
+            ],
+            'Java': [
+                { name: 'System.out.println', cat: 'I/O', desc: 'Imprime en consola con salto de línea.', code: 'System.out.println("Hi");' },
+                { name: 'public static', cat: 'Core', desc: 'Modificadores de acceso comunes.', code: 'public static void main' },
+                { name: 'String', cat: 'Type', desc: 'Clase para cadenas de texto.', code: 'String s = "Texto";' },
+            ]
+        };
+
+        // --- NAVIGATION LOGIC ---
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            // Simular carga
+            const btn = e.target.querySelector('button');
+            const originalText = btn.innerText;
+            btn.innerText = "Verificando...";
+            btn.classList.add('opacity-75');
+            
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.classList.remove('opacity-75');
+                showScreen('screen-dashboard');
+            }, 800);
+        }
+
+        function navigateToDashboard() {
+            showScreen('screen-dashboard');
+        }
+
+        function navigateToList(language) {
+            const title = document.getElementById('list-title');
+            const container = document.getElementById('functions-container');
+            
+            title.innerText = language;
+            container.innerHTML = ''; // Limpiar lista anterior
+
+            const items = functionsData[language] || [];
+
+            if(items.length === 0) {
+                container.innerHTML = '<p class="text-center text-slate-500 text-sm mt-10">No hay funciones disponibles.</p>';
+            }
+
+            items.forEach((func, index) => {
+                const card = document.createElement('div');
+                card.className = "bg-slate-800/50 rounded-xl border border-slate-700 p-4 hover:border-indigo-500/50 transition-all animation-delay-" + index;
+                // Añadir un pequeño retraso a la animación
+                card.style.animation = `fadeIn 0.3s ease-in-out ${index * 0.1}s forwards`;
+                card.style.opacity = '0'; // Inicialmente invisible para la animación
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <span class="text-[10px] font-bold text-indigo-400 bg-indigo-400/10 px-2 py-0.5 rounded uppercase tracking-wider">${func.cat}</span>
+                            <h3 class="font-mono text-base font-bold text-white mt-1">${func.name}</h3>
+                        </div>
+                        <button class="text-slate-500 hover:text-indigo-400 transition-colors" onclick="copyCode(this)">
+                            <i class="far fa-copy"></i>
+                        </button>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-3">${func.desc}</p>
+                    <div class="bg-slate-950 rounded-lg p-3 border border-slate-800 relative group">
+                        <code class="font-mono text-[10px] text-green-400 block overflow-x-auto whitespace-pre">${func.code}</code>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            showScreen('screen-list');
+        }
+
+        function navigateToLogin() {
+            showScreen('screen-login');
+        }
+
+        // --- SEARCH FILTER ---
+        function filterFunctions() {
+            const input = document.getElementById('search-input').value.toLowerCase();
+            const cards = document.querySelectorAll('#functions-container > div');
+            
+            cards.forEach(card => {
+                const text = card.innerText.toLowerCase();
+                if(text.includes(input)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // --- UTILS ---
+        function copyCode(btn) {
+            // Animación visual de copiado
+            const icon = btn.querySelector('i');
+            icon.className = "fas fa-check text-green-500";
+            setTimeout(() => {
+                icon.className = "far fa-copy";
+            }, 1500);
+        }
+
+    </script>
+</body>
+</html>
